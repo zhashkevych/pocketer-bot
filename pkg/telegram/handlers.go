@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/zhashkevych/go-pocket-sdk"
 	"net/url"
@@ -13,11 +12,6 @@ const (
 	commandList  = "list"
 
 	startMessage = "Привет! Чтобы сохранять ссылки в своем Pocket аккаунте, для начала тебе необходимо дать мне на это доступ. Для этого переходи по ссылке:\n%s"
-)
-
-var (
-	invalidUrlError   = errors.New("url is invalid")
-	unableToSaveError = errors.New("unable to save link to Pocket")
 )
 
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {

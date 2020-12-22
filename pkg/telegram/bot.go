@@ -4,7 +4,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/zhashkevych/go-pocket-sdk"
 	"github.com/zhashkevych/telegram-pocket-bot/pkg/storage"
-	"log"
 )
 
 type Bot struct {
@@ -41,7 +40,7 @@ func (b *Bot) Start() error {
 		// Handle commands
 		if update.Message.IsCommand() {
 			if err := b.handleCommand(update.Message); err != nil {
-				log.Println("handle command error", err.Error())
+				b.handleError(update.Message.Chat.ID, err)
 			}
 
 			continue
@@ -49,7 +48,7 @@ func (b *Bot) Start() error {
 
 		// Handle regular messages
 		if err := b.handleMessage(update.Message); err != nil {
-
+			b.handleError(update.Message.Chat.ID, err)
 		}
 	}
 
