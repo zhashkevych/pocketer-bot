@@ -3,16 +3,25 @@ package telegram
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/zhashkevych/go-pocket-sdk"
+	"github.com/zhashkevych/telegram-pocket-bot/pkg/storage"
+	"log"
 )
 
 type Bot struct {
 	bot         *tgbotapi.BotAPI
 	client      *pocket.Client
 	redirectURL string
+
+	storage   storage.TokenStorage
 }
 
-func NewBot(bot *tgbotapi.BotAPI, client *pocket.Client, redirectURL string) *Bot {
-	return &Bot{bot: bot, client: client, redirectURL: redirectURL}
+func NewBot(bot *tgbotapi.BotAPI, client *pocket.Client, redirectURL string, storage storage.TokenStorage) *Bot {
+	return &Bot{
+		bot:         bot,
+		client:      client,
+		redirectURL: redirectURL,
+		storage:     storage,
+	}
 }
 
 func (b *Bot) Start() error {
@@ -31,12 +40,17 @@ func (b *Bot) Start() error {
 
 		// Handle commands
 		if update.Message.IsCommand() {
-			b.handleCommand(update.Message)
+			if err := b.handleCommand(update.Message); err != nil {
+				log.Println("handle command error", err.Error())
+			}
+
 			continue
 		}
 
 		// Handle regular messages
-		b.handleMessage()
+		if err := b.handleMessage(update.Message); err != nil {
+
+		}
 	}
 
 	return nil

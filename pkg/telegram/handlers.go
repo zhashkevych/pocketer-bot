@@ -2,15 +2,22 @@ package telegram
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/zhashkevych/go-pocket-sdk"
+	"net/url"
 )
 
 const (
 	commandStart = "start"
 	commandList  = "list"
 
-	startMessage = "Привет! Чтобы начать сохранять ссылки в своем Pocket аккаунте, для начала тебе необходимо дать мне на это доступ. Для этого переходи по ссылке:\n%s"
+	startMessage = "Привет! Чтобы сохранять ссылки в своем Pocket аккаунте, для начала тебе необходимо дать мне на это доступ. Для этого переходи по ссылке:\n%s"
+)
+
+var (
+	invalidUrlError   = errors.New("url is invalid")
+	unableToSaveError = errors.New("unable to save link to Pocket")
 )
 
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {
@@ -20,21 +27,18 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	case commandList:
 		return b.handleListCommand()
 	default:
-		return b.handleUnknownCommand()
+		return b.handleUnknownCommand(message)
 	}
 }
 
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
-	authLink, err := b.createAuthorizationLink(message.Chat.ID)
+	_, err := b.getAccessToken(message.Chat.ID)
 	if err != nil {
-		return err
+		return b.initAuthorizationProcess(message)
 	}
 
-	// TODO: store messages in config
-	msgText := fmt.Sprintf(startMessage, authLink)
-	msg := tgbotapi.NewMessage(message.Chat.ID, msgText)
+	msg := tgbotapi.NewMessage(message.Chat.ID, "Ты уже авторизовался с помощью своего Pocket аккаунта. Присылай ссылку чтобы сохранить.")
 	_, err = b.bot.Send(msg)
-
 	return err
 }
 
@@ -42,25 +46,43 @@ func (b *Bot) handleListCommand() error {
 	return nil
 }
 
-func (b *Bot) handleUnknownCommand() error {
-	return nil
+func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {
+	msg := tgbotapi.NewMessage(message.Chat.ID, "Я не знаю такой команды :(")
+	_, err := b.bot.Send(msg)
+	return err
 }
 
-func (b *Bot) handleMessage() error {
-	return nil
-}
-
-func (b *Bot) createAuthorizationLink(chatID int64) (string, error) {
-	redirectUrl := b.generateRedirectURL(chatID)
-
-	token, err := b.client.GetRequestToken(context.Background(), redirectUrl)
+func (b *Bot) handleMessage(message *tgbotapi.Message) error {
+	accessToken, err := b.getAccessToken(message.Chat.ID)
 	if err != nil {
-		return "", err
+		return b.initAuthorizationProcess(message)
 	}
 
-	return b.client.GetAuthorizationURL(token, redirectUrl)
+	if err := b.saveLink(message, accessToken); err != nil {
+		return err
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, "Ссылка успешно сохранена!")
+	_, err = b.bot.Send(msg)
+	return err
 }
 
-func (b *Bot) generateRedirectURL(chatID int64) string {
-	return fmt.Sprintf("%s?chat_id=%d", b.redirectURL, chatID)
+func (b *Bot) saveLink(message *tgbotapi.Message, accessToken string) error {
+	if err := b.validateURL(message.Text); err != nil {
+		return invalidUrlError
+	}
+
+	if err := b.client.Add(context.Background(), pocket.AddInput{
+		URL:         message.Text,
+		AccessToken: accessToken,
+	}); err != nil {
+		return unableToSaveError
+	}
+
+	return nil
+}
+
+func (b *Bot) validateURL(text string) error {
+	_, err := url.ParseRequestURI(text)
+	return err
 }
