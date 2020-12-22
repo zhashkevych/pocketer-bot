@@ -27,7 +27,7 @@ func main() {
 	}
 
 	bot := telegram.NewBot(botApi, pocketClient, "http://localhost")
-	redirectServer := server.NewRedirectServer()
+	redirectServer := server.NewRedirectServer("https://t.me/getpocket_client_bot")
 
 	go func() {
 		if err := redirectServer.Start(); err != nil {
