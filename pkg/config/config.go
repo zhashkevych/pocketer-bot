@@ -71,6 +71,11 @@ func fromEnv(cfg *Config) error {
 	}
 	cfg.PocketConsumerKey = viper.GetString("consumer_key")
 
+	if err := viper.BindEnv("auth_server_url"); err != nil {
+		return err
+	}
+	cfg.AuthServerURL = viper.GetString("auth_server_url")
+
 	return nil
 }
 

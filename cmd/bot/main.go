@@ -35,7 +35,7 @@ func main() {
 	}
 	storage := boltdb.NewTokenStorage(db)
 
-	bot := telegram.NewBot(botApi, pocketClient, "http://localhost", storage, cfg.Messages)
+	bot := telegram.NewBot(botApi, pocketClient, cfg.AuthServerURL, storage, cfg.Messages)
 
 	redirectServer := server.NewAuthServer(cfg.BotURL, storage, pocketClient)
 
