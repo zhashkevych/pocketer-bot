@@ -37,11 +37,15 @@ func Init() (*Config, error) {
 	}
 
 	var cfg Config
-	err := unmarshal(&cfg)
+	if err := unmarshal(&cfg); err != nil {
+		return nil, err
+	}
 
-	fromEnv(&cfg)
+	if err := fromEnv(&cfg); err != nil {
+		return nil, err
+	}
 
-	return &cfg, err
+	return &cfg, nil
 }
 
 func unmarshal(cfg *Config) error {
