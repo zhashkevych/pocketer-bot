@@ -60,7 +60,7 @@ jobs:
             export AUTH_SERVER_URL=${{ secrets.AUTH_SERVER_URL }}
 
             # Run a new container from a new image
-            docker run -e TOKEN -e CONSUMER_KEY -e AUTH_SERVER_URL \
+            docker run -e TOKEN -e CONSUMER_KEY -e AUTH_SERVER_URL -d \
             --restart always \
             --publish 80:80 \
             --name $(echo $CONTAINER_NAME) \
