@@ -9,17 +9,12 @@ import (
 
 const (
 	commandStart = "start"
-	commandList  = "list"
-
-	startMessage = "Привет! Чтобы сохранять ссылки в своем Pocket аккаунте, для начала тебе необходимо дать мне на это доступ. Для этого переходи по ссылке:\n%s"
 )
 
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	switch message.Command() {
 	case commandStart:
 		return b.handleStartCommand(message)
-	case commandList:
-		return b.handleListCommand()
 	default:
 		return b.handleUnknownCommand(message)
 	}
@@ -31,17 +26,13 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 		return b.initAuthorizationProcess(message)
 	}
 
-	msg := tgbotapi.NewMessage(message.Chat.ID, "Ты уже авторизовался с помощью своего Pocket аккаунта. Присылай ссылку чтобы сохранить.")
+	msg := tgbotapi.NewMessage(message.Chat.ID, b.messages.Responses.AlreadyAuthorized)
 	_, err = b.bot.Send(msg)
 	return err
 }
 
-func (b *Bot) handleListCommand() error {
-	return nil
-}
-
 func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {
-	msg := tgbotapi.NewMessage(message.Chat.ID, "Я не знаю такой команды :(")
+	msg := tgbotapi.NewMessage(message.Chat.ID, b.messages.Responses.UnknownCommand)
 	_, err := b.bot.Send(msg)
 	return err
 }
@@ -56,7 +47,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 		return err
 	}
 
-	msg := tgbotapi.NewMessage(message.Chat.ID, "Ссылка успешно сохранена!")
+	msg := tgbotapi.NewMessage(message.Chat.ID, b.messages.Responses.LinkSaved)
 	_, err = b.bot.Send(msg)
 	return err
 }

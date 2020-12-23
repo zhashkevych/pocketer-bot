@@ -13,8 +13,7 @@ func (b *Bot) initAuthorizationProcess(message *tgbotapi.Message) error {
 		return err
 	}
 
-	// TODO: storage messages in config
-	msgText := fmt.Sprintf(startMessage, authLink)
+	msgText := fmt.Sprintf(b.messages.Responses.Start, authLink)
 	msg := tgbotapi.NewMessage(message.Chat.ID, msgText)
 	_, err = b.bot.Send(msg)
 

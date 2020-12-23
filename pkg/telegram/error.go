@@ -15,11 +15,11 @@ func (b *Bot) handleError(chatID int64, err error) {
 
 	switch err {
 	case invalidUrlError:
-		messageText = "Это невалидная ссылка"
+		messageText = b.messages.Errors.InvalidURL
 	case unableToSaveError:
-		messageText = "Не удалось сохранить ссылку в Pocket. Попробуйте пожалуйста позже."
+		messageText = b.messages.Errors.UnableToSave
 	default:
-		messageText = "Произошла ошибка"
+		messageText = b.messages.Errors.Default
 	}
 
 	msg := tgbotapi.NewMessage(chatID, messageText)

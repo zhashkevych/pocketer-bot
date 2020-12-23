@@ -3,28 +3,28 @@ package main
 import (
 	"github.com/boltdb/bolt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/joho/godotenv"
 	"github.com/zhashkevych/go-pocket-sdk"
+	"github.com/zhashkevych/telegram-pocket-bot/pkg/config"
 	"github.com/zhashkevych/telegram-pocket-bot/pkg/server"
 	"github.com/zhashkevych/telegram-pocket-bot/pkg/storage"
 	"github.com/zhashkevych/telegram-pocket-bot/pkg/storage/boltdb"
 	"github.com/zhashkevych/telegram-pocket-bot/pkg/telegram"
 	"log"
-	"os"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
+	cfg, err := config.Init()
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	botApi, err := tgbotapi.NewBotAPI(os.Getenv("TOKEN"))
+	botApi, err := tgbotapi.NewBotAPI(cfg.TelegramToken)
 	if err != nil {
 		log.Fatal(err)
 	}
 	botApi.Debug = true
 
-	pocketClient, err := pocket.NewClient(os.Getenv("CONSUMER_KEY"))
+	pocketClient, err := pocket.NewClient(cfg.PocketConsumerKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,9 +35,9 @@ func main() {
 	}
 	storage := boltdb.NewTokenStorage(db)
 
-	bot := telegram.NewBot(botApi, pocketClient, "http://localhost", storage)
+	bot := telegram.NewBot(botApi, pocketClient, "http://localhost", storage, cfg.Messages)
 
-	redirectServer := server.NewAuthServer("https://t.me/getpocket_client_bot", storage, pocketClient)
+	redirectServer := server.NewAuthServer(cfg.BotURL, storage, pocketClient)
 
 	go func() {
 		if err := redirectServer.Start(); err != nil {
